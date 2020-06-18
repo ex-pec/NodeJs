@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+	<style>
+
+		.ust {/*projenin birinci bölümü için gerekli olan css biçimlendirmeleri*/
+			background-color: lightblue;
+			padding: 10px;
+			border-radius: 15px;
+
+
+
+		}
+		.usthucre{
+			text-align: center;
+			padding-right: 100px;
+		}
+		/*projenin ikinci bölümü için gerekli olan css biçimlendirmeleri*/
+		.orta{
+			text-align: left;
+			background-color: #9664B3;
+			border-radius: 15px;
+			padding: 10px;
+
+		}
+		.son{/*projenin üçüncü bölümü için gerekli olan css biçimlendirmeleri alttakiler de öyle*/
+			text-align: center;
+		}
+		.buton{
+			background-color: #fff9cb;
+		}
+		.sel{
+			margin: 15px;
+			padding: 7px;
+			border-radius: 5px;
+			text-align: center;
+
+
+		}
+		.sonhep{
+			background-color: #eaeafa;
+			border-radius: 15px;
+
+		}
+		.enson{
+			background-color: white;
+		}
+
+	</style>
+
+	<div class="ust" align="center"><!-- projenin birinci bölümü için html taglar -->
+		<p id="epoch"></p>
+	</div>
+	<div class="orta"><!-- 2. bölüm için html taglar -->
+		<table>
+			<tr>
+				<td>
+					<form id="frm1">
+					  <input type="number">
+					</form> <!-- veriyi alacak ve buton yardımı ile js fonksiyonunu çağıracak -->
+				</td>
+				<td>
+					<button onclick="EpochToDate()" class="buton">Timestamp to Human date</button>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td>
+					<p id="demo1"></p><!-- GMT için veri alanı -->
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<p id="demo2"></p><!-- local time için veri alanı -->
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="sonhep"><!-- 3. bölüm için gerekli biçimlendirmeler tablo ile sağlandı -->
+		<div class="son">	
+			<table>
+				<tr>
+					<td>
+						<p id="demo3"></p><!-- buraya js de yazılan kod ile uygun select seçim araçları konumlandırılır -->
+					</td>
+					<td>
+						<button onclick="DateToEpoch()" class="buton">Convert</button> <!-- yukarıdakai verileri alıp işleyen fonksiyon -->
+					</td>
+				</tr>
+			</table>
+		</div>
+		<table>
+			<tr>
+				<td>
+					<p>Converted epoch timestep in seconds:</p>
+				</td>
+				<td>
+					<input type="number" id="demo4" value=0 class="sel" readonly style="padding: 5px !important; "><!-- veriyi ekrana yazar -->
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<script type="text/javascript">
+
+	function Epoch(yil,ay,gun,saat,dakika,saniye,GMT) 
+	{//kendisine gönderilen değişkenler ile epochtime hesaplayan fonksiyon 1 ve 3. kısımlarda kullanıldı
+		var yilS=0, ayS=0, saatS=0, dakikaS=0;
+
+		for (var i = 1970; i < yil; i++)
+			yilS += ((i%4!=0)||((i%100==0)&&(i%400!=0)) ? 31536000:31622400);//artık yıl olayı burada kontrol edilip saniye değişkenine eklenir
+
+		var aylar=[31,(((yil%4!=0)||((yil%100==0)&&(yil%400!=0))) ? 28:29),31,30,31,30,31,31,30,31,30,31];
+
+		for (var i = 0; i < ay ; i++)
+			ayS += aylar[i];//ayların gün sayıları bir değişkende toplandıktan sonra günün saniyesi cinsinden çarpılarak işlem gerçekleştirilir
+
+		ayS = (ayS+gun-1)*86400;
+		saatS = (saat+GMT)*3600;
+		dakikaS = dakika*60;
+
+		return (yilS+ayS+saatS+dakikaS+saniye);//geriye saniyeyi döndürür
+	}
+	
+	function LocalTime(yil,ay,gun,saat,dakika,saniye,GMT)
+	{//kendisine gönderilen veriler ile zamanı formatlayan ve geriye döndüren fonksiyon 1 ve 2. kısımlarda kullanıldı
+		var aylar=[31,(((yil%4!=0)||((yil%100==0)&&(yil%400!=0))) ? 28:29),31,30,31,30,31,31,30,31,30,31];
+
+		if ((saat+GMT)<0)//GMT olaylarından gelecek verilerde gün kayması olmaması için bu if bloğu kullanıldı
+		{
+			saat+=GMT+24;
+			gun--;
+			if (gun==0) 
+			{
+				ay--;
+				if (ay<0) 
+				{
+					yil--;
+					ay=11;
+					gun=aylar[ay];
+				}
+				else
+				{
+					gun=aylar[ay];
+				}
+			}
+		} 
+		else 
+		{
+			saat+=GMT;
+		}
+
+		var aylarTxt=["January ","February ","March ","April ","May ","June ","July ","August ","September ","October ","November ","December "];
+
+		var pam = saat > 12 ? saat % 12: saat;//saatin 12 yi geçmemesi olayını kontrol eder
+
+		return (aylarTxt[ay]+gun+","+yil+" "+(pam > 9 ? ""+pam :"0"+pam )+":"+(dakika > 9 ? ""+dakika :"0"+dakika )+":"+(saniye > 9 ? ""+saniye :"0"+saniye )+" "+(((saat%24)>11) ? "pm":"am"));//istenilen formatta veriyi string olarak direk return yapar
+	}
+
+	function EpochToDate() 
+	{//epoch zamanından normal zamana çeviren fonksiyon 2. kısımda kullanıldı
+		var yil=1970,ay,gun,saat,dakika,saniye,temp;
+		var x = document.getElementById("frm1");//girilen veri alınarak işlenmeye başlandı
+		var sayi=Number(x.elements[0].value);
+
+		var gunler=["Sunday, ","Monday, ","Tuesday, ","Wednesday, ","Thursday, ","Friday, ","Saturday, "];
+		//öncelikle alınan veri gun,saat,dakika,saniyeye ayrıldı
+		temp=sayi%86400;
+		gun=(sayi-temp)/86400;
+		sayi=temp;
+		temp=sayi%3600;
+		saat=(sayi-temp)/3600;
+		sayi=temp;
+		saniye=sayi%60;
+		dakika=(sayi-saniye)/60;
+
+		var gunTxt=gunler[(gun-3+7)%7];//hangi günde olduğumuz 1 ocak 1970dekine göre günün modunu alarak bulunabilir
+		var gunTxtUTC=gunler[(gun-2+7)%7];//gmt +3 den dolayı bir sonraki gün de değişkende tutuldu lazım olursa kullanılacak
+		
+		for (var i = 1970;  ; i++)
+		{//bu blokta toplam gün sayısından o yıla kadar olan kısım artıklarda ayırt edilerek düşüldü
+			if (((i%4!=0)||((i%100==0)&&(i%400!=0)))&&(gun>=365))
+			{
+				gun-=365;
+				yil++; 
+			}
+			else if(gun>=366)
+			{
+				gun-=366;
+				yil++;
+			}
+			else
+			{//geriye kalan gün verisi ay hesabı için kullanılmak üzere ay günlerinden düşüldü
+				var j=0;
+				var aylar=[31,(((yil%4!=0)||((yil%100==0)&&(yil%400!=0))) ? 28:29),31,30,31,30,31,31,30,31,30,31];
+
+				for (j = 0; (j < 12) && (gun >= aylar[j]) ; j++)
+					gun-=aylar[j];
+
+				ay=j;//bu döngüdeki son veri bulunulan ay olduğundan ay verisi bu şekilde bulundu
+				gun+=1;//geriye kalan gün o gün içinde bulunduğumuz gün hariç olduğundan +1 eklenerek bulundu
+				break;
+			}
+		}
+		//eğer saat verisi 20 den büyük ise yani 21 den sonra +3GMT den dolayı bir gün kayma olacaktır bu yüzden ekrana local time da bir gün sonrasının günü yazıldı
+		gunTxtUTC = saat > 20 ? gunTxtUTC : gunTxt;
+		//verileri uygun formatta işlemek için yukarıdaki fonksiyonlardan yararlanılır
+		document.getElementById("demo1").innerHTML = "<td><b>GMT: </b>"+gunTxt+LocalTime(yil,ay,gun,saat,dakika,saniye,0)+"</td>";
+		document.getElementById("demo2").innerHTML = "<td><b>Your time zone: </b>"+ gunTxtUTC +LocalTime(yil,ay,gun,saat,dakika,saniye,+3)+"<b> GMT +03:00</b></td>";
+	}
+
+	function DateTo() 
+	{//select options sistemi için bu formata uygun string üreten js fonksiyonu
+		var aylarTxt=["January","February","March","April","May","June","July","August","September","October","November","December"];
+		var str="";
+		str+="<table><tr><td><select id='timeYil' class='sel'>";
+		for (var i = 1971; i <2024 ; i++) 
+			str+="<option value="+i+">"+i+"</option>";
+		str+="</select></td>";
+
+		str+="<td><select id='timeAy' class='sel'>";
+		for (var i = 0; i <12 ; i++) {
+			str+="<option value="+i+">"+(i<9 ? "0"+(i+1):(i+1))+" - "+aylarTxt[i]+"</option>";
+		}
+		str+="</select></td>";
+
+		str+="<td><select id='timeGun' class='sel'>";
+		for (var i = 1; i <=31 ; i++) {
+			str+="<option value="+i+">"+(i<10 ? "0"+i:i)+"</option>";
+		}
+		str+="</select></td>";
+
+		str+="<td><select id='timeSaat' class='sel'>";
+		for (var i = 0; i <=23 ; i++) {
+			str+="<option value="+i+">"+(i<10 ? "0"+i:i)+"</option>";
+		}
+		str+="</select></td>";
+
+		str+="<td><select id='timeDakika' class='sel'>";
+		for (var i = 0; i <=59 ; i++) {
+			str+="<option value="+i+">"+(i<10 ? "0"+i:i)+"</option>";
+		}
+		str+="</select></td>";
+
+		str+="<td><select id='timeSaniye' class='sel'>";
+		for (var i = 0; i <=59 ; i++) {
+			str+="<option value="+i+">"+(i<10 ? "0"+i:i)+"</option>";
+		}
+		str+="</select></td>";
+
+		str+="<td><select id='GMT' class='sel'>";
+			str+="<option value=+3>Local</option>";
+			str+="<option value=0>GMT</option>";
+		str+="</select></td>";
+		//buradaki her bir veri tablonun hücreleri olarak doğru şekilde konumlandırıldı ve geriye bu string veriyi döndürür
+		return str;
+	}
+
+	function DateToEpoch() 
+	{//bu fonksiyon 3. bölüm için geçerli fonrm okuma ve hazır fonksiyonlarımıza gönderme işlemlerini yapar
+		var timeY 	= document.getElementById("timeYil");
+		var timeA 	= document.getElementById("timeAy");
+		var timeG 	= document.getElementById("timeGun");
+		var timeS 	= document.getElementById("timeSaat");
+		var timeD 	= document.getElementById("timeDakika");
+		var timeSn 	= document.getElementById("timeSaniye");
+		var timeZ 	= document.getElementById("GMT");
+		//okunan veriler string formatında olduğundan önce number a çevrilir sonra hazır fonksiyonumuza gönderilerek epoch zamanı hesaplanır
+		var yil		=Number(timeY.options[timeY.selectedIndex].value);
+		var ay		=Number(timeA.options[timeA.selectedIndex].value);
+		var gun		=Number(timeG.options[timeG.selectedIndex].value);
+		var saat	=Number(timeS.options[timeS.selectedIndex].value);
+		var dakika	=Number(timeD.options[timeD.selectedIndex].value);
+		var saniye	=Number(timeSn.options[timeSn.selectedIndex].value);
+		var GMT		=Number(timeZ.options[timeZ.selectedIndex].value);
+
+  		document.getElementById("demo4").value = Epoch(yil,ay,gun,saat,dakika,saniye,GMT);
+	}
+
+	function inter() 
+	{//1. bölümü her saniye güncellemesi için bu fonksiyon kullanıldı
+		var tarih 	= new Date();
+		var yil		=tarih.getFullYear();
+		var ay		=tarih.getMonth();
+		var gun 	=tarih.getDate();
+		var saat	=tarih.getHours();
+		var dakika	=tarih.getMinutes();
+		var saniye	=tarih.getSeconds();
+		//alınan veriler local time verileri olduğundan dolayı UNIX time hesabı yapılabilmesi için -3 olarak fonksiyona gönderildi
+		var str="<table><tr><td class='usthucre'>Current Unix Timestamp</td><td class='usthucre'>Current Local Time</td><td class='usthucre'>Current Unix Time</td></tr>";
+		var str2="<tr><td class='usthucre'>"+Epoch(yil,ay,gun,saat,dakika,saniye,-3)+"</td><td class='usthucre'>"+LocalTime(yil,ay,gun,saat,dakika,saniye,0)+"</td><td class='usthucre'>"+LocalTime(yil,ay,gun,saat,dakika,saniye,-3)+"</td></tr></table>";
+		document.getElementById("epoch").innerHTML = str+str2;
+
+	}
+	setInterval(inter,1000);//her saniye yukarıdaki fonksiyon çağrılır
+	document.getElementById("demo3").innerHTML = DateTo();//3. bölüm için konumlandırılan tag id sine veri yazdırılır
+
+	</script>
+	
+</body>
+</html>
